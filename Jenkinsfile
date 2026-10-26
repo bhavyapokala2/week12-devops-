@@ -1,27 +1,26 @@
 pipeline {
     agent any
 
+    environment {
+        // Point Jenkins directly to your Python site-packages
+        PYTHONPATH = 'C:\\Users\\BHAVYA\\AppData\\Roaming\\Python\\Python312\\site-packages'
+    }
+
     stages {
         stage('Run Selenium Tests with pytest') {
-    steps {
-        echo "Running Selenium Tests using pytest"
+            steps {
+                echo "Running Selenium Tests using pytest"
 
-        bat '''
-            set PYTHONHOME=
-            set PYTHONPATH=
-            python -m pip install --upgrade pip
-            python -m pip install -r requirements.txt
-        '''
+                // Start Flask app in background
+                bat 'start /B "FlaskServer" "C:\\Program Files\\Python312\\python.exe" app.py'
 
-        bat 'start /B python app.py'
+                // Wait 5 seconds for the server to start
+                bat 'C:\\Windows\\System32\\ping.exe 127.0.0.1 -n 5 > nul'
 
-        // Wait a few seconds for the server to start
-        bat 'ping 127.0.0.1 -n 5 > nul'
-
-  
-        bat 'python -m pytest -v'
-    }
-}
+                // Run pytest using the global Python executable
+                bat '"C:\\Program Files\\Python312\\python.exe" -m pytest -v'
+            }
+        }
         stage('Build Docker Image') {
             steps {
                 echo "Build Docker Image"
@@ -30,20 +29,20 @@ pipeline {
         }
         stage('Docker Login') {
             steps {
-                bat 'docker login -u bhavyasrip -p <your_dockerhub_password>'
+                // Ensure your real Docker Hub password or personal access token is here
+                bat 'docker login -u bhavyasrip -p Bhavya2612@@'
             }
         }
         stage('push Docker Image to Docker Hub') {
             steps {
                 echo "push Docker Image to Docker Hub"
                 bat "docker tag seleniumdemoapp:v1 bhavyasrip/w12-registrationapp:v1"
-
                 bat "docker push bhavyasrip/w12-registrationapp:v1"
             }
         }
         stage('Deploy to Kubernetes') {
             steps {
-                // apply deployment & service
+                // Apply deployment and service
                 bat 'kubectl apply -f deployment.yaml --validate=false'
                 bat 'kubectl apply -f service.yaml'
             }
