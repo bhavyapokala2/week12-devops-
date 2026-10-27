@@ -3,21 +3,22 @@ pipeline {
 
     stages {
         stage('Run Selenium Tests with pytest') {
-            steps {
-                echo "Running Selenium Tests using pytest"
+    steps {
+        echo "Running Selenium Tests using pytest"
 
-                // Install Python dependencies
-                bat 'pip install -r requirements.txt'
+        // 1. Install dependencies
+        bat 'pip install -r requirements.txt'
 
-                // ✅ Start Flask app in background
-                bat 'start /B python app.py'
+        // 2. Start Flask app in the background
+        bat 'start /B python app.py'
 
-              sleep time: 5, unit: 'SECONDS'
-                // ✅ Run tests using pytest
-                //bat 'pytest tests\\test_registrationapp.py --maxfail=1 --disable-warnings --tb=short'
-                bat 'pytest -v'
-            }
-        }
+        // 3. Built-in sleep (avoids "ping not recognized" or "null" exit codes)
+        sleep time: 5, unit: 'SECONDS'
+
+        // 4. Run pytest
+        bat 'pytest -v'
+    }
+}
 
         stage('Build Docker Image') {
             steps {
